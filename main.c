@@ -4,7 +4,25 @@
 #include <assert.h>
 #include "matrix.c"
 #include "vectorVoid.h"
-
+void copyFileContent(const char* sourceFile, const char* destinationFile) {
+    FILE *source, *destination;
+    char ch;
+    source = fopen(sourceFile, "r");
+    if (source == NULL) {
+        printf("error opening the source file\n");
+        return;
+    }
+    destination = fopen(destinationFile, "w");
+    if (destination == NULL) {
+        printf("file could not be opened for writing\n");
+        fclose(source);
+        return;
+    }
+    while ((ch = fgetc(source)) != EOF)
+        fputc(ch, destination);
+    fclose(source);
+    fclose(destination);
+}
 void task_1(const char *filename, size_t n) {
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
@@ -405,11 +423,98 @@ void test_task_4() {
     test_task_4_void();
     test_task_4_3();
 }
+
+int task_5(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("File opening error\n");
+        return 1;
+    }
+    FILE *result_file = fopen("result_file", "w");
+    if (result_file == NULL) {
+        printf("File opening error\n");
+        fclose(file);
+        return 1;
+    }
+    char line[1024], longest_word[1000];
+    int maxLen = 0;
+    while (fgets(line, sizeof(line), file)) {
+        char *key = strtok(line, " ");
+        while (key != NULL) {
+            if (strlen(key) > maxLen) {
+                maxLen = strlen(key);
+                strcpy(longest_word, key);
+            }
+            key = strtok(NULL, " ");
+        }
+        fprintf(result_file, "%s", longest_word);
+        maxLen = 0;
+        longest_word[0] = '\0';
+    }
+    fclose(file);
+    fclose(result_file);
+    copyFileContent("result_file", filename);
+    return 0;
+}
+
+void test_task_5_void_file() {
+    const char filename[] = "19_5_test_void";
+
+    FILE* file = fopen(filename, "w");
+    fclose(file);
+
+    task_5(filename);
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fprintf(file, "%s", data);
+
+    fclose(file);
+
+    assert(strcmp(data, "") == 0);
+}
+
+void test_task_5_2() {
+    const char filename[] = "19_5_test_2";
+
+    char line_1[] = "qwe";
+    char line_2[] = "rty";
+
+    FILE* file = fopen(filename, "w");
+
+    fprintf(file, "%s\n", line_1);
+    fprintf(file, "%s\n", line_2);
+
+    fclose(file);
+
+    task_5(filename);
+
+    file = fopen(filename, "r");
+
+    char res_line_1[3] = "";
+    fscanf(file, "%s\n", res_line_1);
+
+    char res_line_2[3] = "";
+    fscanf(file, "%s\n", res_line_2);
+
+    fclose(file);
+
+    assert(strcmp(line_1, res_line_1) == 0);
+    assert(strcmp(line_2, res_line_2) == 0);
+}
+
+void test_task_5_all() {
+    test_task_5_void_file();
+    test_task_5_2();
+}
 int main() {
     //test_task_1();
     //test_task_2();
     //test_task_3_all_action();
     //test_task_4();
+    test_task_5_all();
+
 
     return 0;
 }
