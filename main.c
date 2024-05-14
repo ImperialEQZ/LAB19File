@@ -5,18 +5,7 @@
 #include "matrix.c"
 #include "vectorVoid.h"
 
-FILE* check_file_open_without_error(const char* filename) {
-    FILE *file = fopen(filename, "r");
-
-    if (file == NULL) {
-        printf("error reading\n");
-        exit(1);
-    }
-
-    return file;
-}
-
-void generate_random_matrix_file(const char *filename, size_t n) {
+void task_1(const char *filename, size_t n) {
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
         printf("reading error\n");
@@ -36,7 +25,7 @@ void generate_random_matrix_file(const char *filename, size_t n) {
     fclose(file);
 }
 
-void transpose_matrix_in_file(const char* filename) {
+void transpose_matrix_in_file_task_1(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         printf("reading error\n");
@@ -76,7 +65,31 @@ void transpose_matrix_in_file(const char* filename) {
 
     freeMemMatrix(&matrix);
 }
+void test_task_1() {
+    const char filename[] = "19_1";
+    int n = 3;
+    matrix m = createMatrixFromArray((int[]) {9, 8, 7,
+                                              0, 5, 4,
+                                              -7, 29, -1}, 3, 3);
 
+    FILE* file = fopen(filename, "w");
+
+    fprintf(file, "%d\n", n);
+
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
+            fprintf(file, "%d ", m.values[i][j]);
+        }
+
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+
+    transpose_matrix_in_file_task_1(filename);
+
+    freeMemMatrix(&m);
+}
 void task_2(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
@@ -156,24 +169,147 @@ void test_task_2() {
     test_task_2_three_numb();
 }
 
-int main() {
-    generate_random_matrix_file("ex", 5);
-    FILE *file = check_file_open_without_error("ex");
+int task_3(const char *filename) {
+    FILE *file = fopen(filename, "r+");
+    char action;
+    int num_1, num_2, answer;
+    if (file == NULL) {
+        printf("File opening error\n");
+        return 1;
+    }
+    fscanf(file, "%d %c %d", &num_1, &action, &num_2);
+    switch (action) {
+        case '+':
+            answer = num_1 + num_2;
+            break;
+        case '-':
+            answer = num_1 - num_2;
+            break;
+        case '*':
+            answer = num_1 * num_2;
+            break;
+        case '/':
+            if (num_2 == 0) {
+                fprintf(stderr, "Сannot be divided zero");
+                exit(1);
+            }
+            answer = num_1 / num_2;
+            break;
+        default:
+            printf("Operation error\n");
+            fclose(file);
+            return 1;
+    }
+    fprintf(file, "\nAnswer: %d\n", answer);
+    fclose(file);
+    return 0;
+}
 
+void test_task_3_test_1() {
+    const char filename[] = "19_3_test_1";
 
-    long long n;
-    fscanf(file, "%lld", &n);
+    char expression[] = "3 * 4";
+    FILE* file = fopen(filename, "w");
 
-    matrix matrix = getMemMatrix((int) n, (int) n);
-
-    for (size_t i = 0; i < n; i++)
-        for (size_t j = 0; j < n; j++)
-            fscanf(file, "%d", &matrix.values[i][j]);
-
-    outputMatrix(matrix);
+    fputs(expression, file);
 
     fclose(file);
+
+    task_3("19_3_test_1");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "3 * 4 = 12";
+
+    assert(strcmp(data, res));
+}
+
+void test_task_3_test_2() {
+    const char filename[] = "19_3_test_2";
+
+    char expression[] = "4 / 0";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_3("19_3_test_2");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "4 / 0 = Сannot be divided zero";
+
+    assert(strcmp(data, res));
+}
+void test_task_3_test_3() {
+    const char filename[] = "19_3_test_3";
+
+    char expression[] = "10 - 5";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_3("19_3_test_3");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "10 - 5 = 5";
+
+    assert(strcmp(data, res));
+}
+void test_task_3_test_4() {
+    const char filename[] = "19_3_test_4";
+
+    char expression[] = "77 + 33";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_3("19_3_test_4");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "77 + 33 = 110";
+
+    assert(strcmp(data, res));
+}
+
+void test_task_3_all_action() {
+    test_task_3_test_1();
+    test_task_3_test_2();
+    test_task_3_test_3();
+    test_task_3_test_4();
+}
+
+int main() {
+    test_task_1();
     test_task_2();
+    //test_task_3_all_action();
     return 0;
 }
 
