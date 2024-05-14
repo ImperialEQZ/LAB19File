@@ -306,10 +306,111 @@ void test_task_3_all_action() {
     test_task_3_test_4();
 }
 
+int task_4(const char *filename, char sequence[20]) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("File opening error\n");
+        return 1;
+    }
+    FILE *result_file = fopen("result_file", "w");
+    if (result_file == NULL) {
+        printf("File opening error\n");
+        fclose(file);
+        return 1;
+    }
+    char word[100];
+    while (fscanf(file, "%s", word) != EOF) {
+        if (strstr(word, sequence) != NULL)
+            fprintf(result_file, "%s", word);
+    }
+    fclose(file);
+    fclose(result_file);
+    return 0;
+}
+
+void test_task_4_1() {
+    const char filename[] = "19_4_test_1";
+
+    char expression[] = "Hello World";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_4("19_4_test_1", "Hello");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "Hello";
+
+    assert(strcmp(data, res));
+}
+
+void test_task_4_void() {
+    const char filename[] = "19_4_test_2";
+
+    char expression[] = "";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_4("19_4_test_2", "");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "";
+
+    assert(strcmp(data, res));
+}
+
+void test_task_4_3() {
+    const char filename[] = "19_4_test_3";
+
+    char expression[] = "!?234";
+    FILE* file = fopen(filename, "w");
+
+    fputs(expression, file);
+
+    fclose(file);
+
+    task_4("19_4_test_3", "!?");
+
+    file = fopen(filename, "r");
+
+    char data[100] = "";
+    fgets(data, sizeof(data), file);
+
+    fclose(file);
+
+    char res[] = "234";
+
+    assert(strcmp(data, res));
+}
+
+void test_task_4() {
+    test_task_4_1();
+    test_task_4_void();
+    test_task_4_3();
+}
 int main() {
-    test_task_1();
-    test_task_2();
+    //test_task_1();
+    //test_task_2();
     //test_task_3_all_action();
+    //test_task_4();
+
     return 0;
 }
 
