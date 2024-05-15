@@ -3,9 +3,11 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <limits.h>
 #include "matrix.c"
 #include "vectorVoid.h"
 #include "vector.h"
+
 void copyFileContent(const char* sourceFile, const char* destinationFile) {
     FILE *source, *destination;
     char ch;
@@ -865,6 +867,97 @@ void test_task_8_all_option() {
     test_task_8();
     test_task_8_exceptions_void_matrix();
 }
+
+typedef struct {
+    char *initials;
+    int score;
+} Sportsman;
+
+void sort_sportsman_task_9(Sportsman sm[], const int n) {
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n - i - 1; j++)
+            if (sm[j].score < sm[j + 1].score) {
+                Sportsman copy = sm[j];
+                sm[j] = sm[j + 1];
+                sm[j + 1] = copy;
+            }
+}
+
+void task_9(const char* filename, const int n) {
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("reading error\n");
+        exit(1);
+    }
+
+    Sportsman* team = (Sportsman*) malloc(INT_MAX * sizeof(Sportsman));
+
+    Sportsman* rec_ = team;
+    int number_sportsman = 0;
+    while (fread(rec_, sizeof(Sportsman), 1, file) == 1) {
+        rec_++;
+        number_sportsman++;
+    }
+
+    fclose(file);
+
+    file = fopen(filename, "wb");
+    if (file == NULL) {
+        printf("reading error\n");
+        exit(1);
+    }
+
+    sort_sportsman_task_9(team, number_sportsman);
+    int number_in_team;
+    if(number_sportsman >= n){
+        number_in_team = n;
+    } else {
+        number_in_team = number_sportsman;
+    }
+
+    for (int i = 0; i < number_in_team; i++) {
+        fwrite(team + i, sizeof(Sportsman), 1, file);
+    }
+
+    free(team);
+    fclose(file);
+}
+
+void test_task_9_exceptions_void_file() {
+    const char filename[] = "19_9_test_1";
+    FILE* file = fopen(filename, "wb");
+    fclose(file);
+
+    task_9(filename, 0);
+
+    file = fopen(filename, "rb");
+    char res[100] = "";
+    fread(res, sizeof(res), 1, file);
+    fclose(file);
+    assert(strcmp(res, "") == 0);
+}
+
+void test_task_9_common_option() {
+    const char filename[] = "19_9_test_2";
+    FILE* file = fopen(filename, "wb");
+    Sportsman s1 = {.score = 24.5, .initials="first"};
+    Sportsman s2 = {.score = 10.77,  .initials="second"};
+    fwrite(&s1, sizeof(Sportsman), 1, file);
+    fwrite(&s2, sizeof(Sportsman), 1, file);
+    fclose(file);
+
+    task_9(filename, 1);
+    file = fopen(filename, "rb");
+    Sportsman answer;
+    fread(&answer, sizeof(Sportsman), 1, file);
+    fclose(file);
+    assert(strcmp(s1.initials, answer.initials) == 0 && fabs(s1.score - answer.score) <= 0.0001);
+}
+
+void test_task_9_all_option() {
+    //test_task_9_exceptions_void_file();
+    test_task_9_common_option();
+}
 int main() {
     //test_task_1();
     //test_task_2();
@@ -873,7 +966,8 @@ int main() {
     //test_task_5_all();
     //test_task_6();
     //test_task_7_all_options();
-    test_task_8_all_option();
+    //test_task_8_all_option();
+    test_task_9_all_option();
 
     return 0;
 }
