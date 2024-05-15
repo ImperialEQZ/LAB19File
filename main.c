@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 #include "matrix.c"
 #include "vectorVoid.h"
 void copyFileContent(const char* sourceFile, const char* destinationFile) {
@@ -508,13 +509,103 @@ void test_task_5_all() {
     test_task_5_void_file();
     test_task_5_2();
 }
+
+typedef struct {
+    int power;
+    int coefficient;
+} Polynomial;
+
+void task_6() {
+    FILE *input_file = fopen("19_6", "rb");
+    FILE *output_file = fopen("19_6_res", "wb");
+
+    double x = 2.000;
+
+    while (!feof(input_file)) {
+        int term_count;
+        if (fread(&term_count, sizeof(int), 1, input_file) != 1)
+            break;
+
+        Polynomial *polys = (Polynomial *)malloc(term_count * sizeof(Polynomial));
+        fread(polys, sizeof(Polynomial), term_count, input_file);
+
+        double sum = 0.0;
+        for (int i = 0; i < term_count; i++) {
+            sum += polys[i].coefficient * pow(x, polys[i].power);
+        }
+
+        if (sum != 0) {
+            fwrite(&term_count, sizeof(int), 1, output_file);
+            fwrite(polys, sizeof(Polynomial), term_count, output_file);
+        }
+
+        free(polys);
+    }
+
+    fclose(input_file);
+    fclose(output_file);
+}
+
+void generate_task_6() {
+    FILE *input_file = fopen("19_6", "wb");
+    FILE *excepted_file = fopen("19_6_excepted", "wb");
+
+    int power = 3;
+    Polynomial _1[] = {{2, 3}, {1, -12}, {0, 12}};
+    fwrite(&power, sizeof(int), 1, input_file);
+    fwrite(_1, sizeof(Polynomial), power, input_file);
+
+    power = 4;
+    Polynomial _2[] = {{3, 8}, {2, -6}, {1, 12}, {0, -88}};
+    fwrite(&power, sizeof(int), 1, input_file);
+    fwrite(_2, sizeof(Polynomial), power, input_file);
+
+    fwrite(&power, sizeof(int), 1, excepted_file);
+    fwrite(_2, sizeof(Polynomial), power, excepted_file);
+
+    power = 2;
+    Polynomial _3[] = {{1, 15}, {0, -7}};
+    fwrite(&power, sizeof(int), 1, input_file);
+    fwrite(_3, sizeof(Polynomial), power, input_file);
+
+    power = 5;
+    Polynomial _4[] = {{4, 15}, {3, -7}, {2, 44}, {1, 28}, {0, 0}};
+    fwrite(&power, sizeof(int), 1, input_file);
+    fwrite(_4, sizeof(Polynomial), power, input_file);
+
+
+    fclose(input_file);
+    fclose(input_file);
+}
+
+void test_task_6() {
+    generate_task_6();
+    task_6();
+
+    FILE *output_file = fopen("19_6_test_output", "rb");
+    FILE *excepted_file = fopen("19_6_test_excepted", "rb");
+
+    int num_1, num_2;
+    int flag = 0;
+    while (fread(&num_1, sizeof(int), 1, output_file) == 1 && fread(&num_2, sizeof(int), 1, excepted_file) == 1) {
+        if (num_1 != num_2) {
+            flag = 1;
+            break;
+        }
+    }
+    fclose(output_file);
+    fclose(excepted_file);
+    if (flag == 1) {
+        printf("Error\n");
+    }
+}
 int main() {
     //test_task_1();
     //test_task_2();
     //test_task_3_all_action();
     //test_task_4();
-    test_task_5_all();
-
+    //test_task_5_all();
+    test_task_6();
 
     return 0;
 }
