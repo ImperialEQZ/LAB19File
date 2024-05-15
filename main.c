@@ -940,8 +940,8 @@ void test_task_9_exceptions_void_file() {
 void test_task_9_common_option() {
     const char filename[] = "19_9_test_2";
     FILE* file = fopen(filename, "wb");
-    Sportsman s1 = {.score = 24.5, .initials="first"};
-    Sportsman s2 = {.score = 10.77,  .initials="second"};
+    Sportsman s1 = {.score = 24.5, .initials="Braza"};
+    Sportsman s2 = {.score = 10.77,  .initials="Duna"};
     fwrite(&s1, sizeof(Sportsman), 1, file);
     fwrite(&s2, sizeof(Sportsman), 1, file);
     fclose(file);
@@ -955,19 +955,169 @@ void test_task_9_common_option() {
 }
 
 void test_task_9_all_option() {
-    //test_task_9_exceptions_void_file();
+    test_task_9_exceptions_void_file();
     test_task_9_common_option();
 }
+
+typedef struct {
+    char *name_product;
+    int unit_price_product;
+    int all_price_products;
+    int amount_products;
+} product;
+
+typedef struct {
+    char *name_orders;
+    int amount_orders;
+} information_orders;
+
+void task_10(char *filename_f, char *filename_g) {
+    FILE *file_f = fopen(filename_f, "rb");
+    if (file_f == NULL) {
+        printf("Error opening file F\n");
+        exit(1);
+    }
+    FILE *file_g = fopen(filename_g, "rb");
+    if (file_g == NULL) {
+        printf("Error opening file G\n");
+        exit(1);
+    }
+    FILE *result_file = fopen("result.txt", "wb");
+    if (result_file == NULL) {
+        printf("Error creating resulting file.\n");
+        fclose(file_f);
+        fclose(file_g);
+        exit(1);
+    }
+    product goods;
+    information_orders ordered_stuff;
+    while (fread(&ordered_stuff, sizeof(information_orders), 1, file_g)) {
+        while (fread(&goods, sizeof(product), 1, file_f)) {
+            if (ordered_stuff.name_orders == goods.name_product) {
+                int price = ordered_stuff.amount_orders * goods.unit_price_product;
+                goods.amount_products = goods.amount_products - ordered_stuff.amount_orders;
+                goods.all_price_products = goods.all_price_products - price;
+                if (goods.amount_products > 0)
+                    fwrite(&goods, sizeof(product), 1, result_file);
+                break;
+            } else
+                fwrite(&goods, sizeof(product), 1, result_file);
+        }
+    }
+    fclose(file_f);
+    fclose(file_g);
+    fclose(result_file);
+}
+
+void test_task_10_exceptions_void_file() {
+    const char filename1[] = "19_10_test_1_f";
+    const char filename2[] = "19_10_test_1_g";
+
+    FILE* file = fopen(filename1, "wb");
+    fclose(file);
+
+    file = fopen(filename2, "wb");
+    fclose(file);
+
+    task_10(filename1, filename2);
+
+    char data_1[10] = "";
+    file = fopen(filename1, "rb");
+    fread(data_1, sizeof(data_1), 1, file);
+    fclose(file);
+
+    char data_2[10] = "";
+    file = fopen(filename1, "rb");
+    fread(data_2, sizeof(data_2), 1, file);
+    fclose(file);
+
+    assert(strcmp(data_1, "") == 0);
+    assert(strcmp(data_2, "") == 0);
+}
+
+void test_task_10_exceptions_order_more_product() {
+    const char filename1[] = "19_10_test_2_f";
+    const char filename2[] = "19_10_test_2_g";
+
+    product pr1 = {.name_product="BIMBIM_1", .unit_price_product=15, .all_price_products=33, .amount_products=4};
+    product pr2 = {.name_product="BAMBAM_2", .unit_price_product=27, .all_price_products=69, .amount_products=3};
+    information_orders od = {.name_orders="BAMBAM_2", .amount_orders=10};
+
+    FILE* file = fopen(filename1, "wb");
+    fwrite(&pr1, sizeof(product), 1, file);
+    fwrite(&pr2, sizeof(product), 1, file);
+    fclose(file);
+
+    file = fopen(filename2, "wb");
+    fwrite(&od, sizeof(information_orders), 1, file);
+    fclose(file);
+
+    task_10(filename1, filename2);
+
+    product answer_pr;
+    information_orders res_od;
+
+    file = fopen(filename1, "rb");
+    fread(&answer_pr, sizeof(product), 1, file);
+    fclose(file);
+
+    file = fopen(filename2, "rb");
+    fread(&res_od, sizeof(information_orders), 1, file);
+    fclose(file);
+
+    assert(strcmp(pr1.name_product, answer_pr.name_product) == 0);
+    assert(pr1.unit_price_product == answer_pr.unit_price_product);
+    assert(pr1.all_price_products == answer_pr.all_price_products);
+    assert(pr1.amount_products == answer_pr.amount_products);
+    assert(strcmp(od.name_orders, res_od.name_orders) == 0 && od.amount_orders == res_od.amount_orders);
+}
+
+void test_task_10_exceptions_second_file_void() {
+    const char filename1[] = "19_10_test_3_f";
+    const char filename2[] = "19_10_test_3_п";
+
+    FILE *file = fopen(filename1, "wb");
+    product pr = {.name_product="ABOBA", .unit_price_product=27, .all_price_products=69, .amount_products=3};
+    fwrite(&pr, sizeof(product), 1, file);
+    fclose(file);
+
+    file = fopen(filename2, "wb");
+    fclose(file);
+
+    task_10(filename1, filename2);
+
+    file = fopen(filename1, "rb");
+    product answer_pr;
+    fread(&answer_pr, sizeof(product), 1, file);
+    fclose(file);
+
+    file = fopen(filename2, "rb");
+    char data[10] = "";
+    fread(data, sizeof(data), 1, file);
+    fclose(file);
+
+    assert(strcmp(pr.name_product, answer_pr.name_product) == 0);
+    assert(pr.unit_price_product == answer_pr.unit_price_product);
+    assert(pr.all_price_products == answer_pr.all_price_products);
+    assert(pr.amount_products == answer_pr.amount_products);
+    assert(strcmp(data, "") == 0);
+}
+void test_task_10_all_option() {
+    test_task_10_exceptions_void_file();
+    test_task_10_exceptions_order_more_product();
+    test_task_10_exceptions_second_file_void();
+}
 int main() {
-    //test_task_1();
-    //test_task_2();
-    //test_task_3_all_action();
-    //test_task_4();
-    //test_task_5_all();
-    //test_task_6();
-    //test_task_7_all_options();
-    //test_task_8_all_option();
+    test_task_1();
+    test_task_2();
+    test_task_3_all_action();
+    test_task_4();
+    test_task_5_all();
+    test_task_6();
+    test_task_7_all_options();
+    test_task_8_all_option();
     test_task_9_all_option();
+    test_task_10_all_option();
 
     return 0;
 }
