@@ -736,6 +736,135 @@ void test_task_7_all_options() {
     test_task_7_exceptions_only_positive();
     test_task_7_exceptions_only_negative();
 }
+
+void task_8(char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("Error opening file\n");
+        exit(1);
+    }
+    FILE *result_file = fopen("result.txt", "wb");
+    if (result_file == NULL) {
+        printf("Error creating resulting file.\n");
+        fclose(file);
+        exit(1);
+    }
+    matrix m;
+    while (fread(&m, sizeof(matrix), 1, file)) {
+        if (!isSymmetricMatrix(&m)) {
+            transposeMatrix(&m);
+            fwrite(&m, sizeof(matrix), 1, result_file);
+        } else {
+            fwrite(&m, sizeof(matrix), 1, result_file);
+        }
+    }
+    fclose(file);
+    fclose(result_file);
+}
+
+void test_task_8_exceptions_sym_m() {
+    const char filename[] = "19_8_test_1";
+
+    FILE* file = fopen(filename, "wb");
+
+    int n = 3;
+    matrix m = createMatrixFromArray((int[]) {3, 1, 2,
+                                              1, 6, 0,
+                                              2, 0, 4}, 3, 3);
+
+    fwrite(&n, sizeof(int), 1, file);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            fwrite(&m.values[i][j], sizeof(int), 1, file);
+
+    fclose(file);
+
+    task_8(filename);
+
+    file = fopen(filename, "rb");
+
+    int answer_n;
+    fread(&answer_n, sizeof(int), 1, file);
+    matrix answer_m = getMemMatrix(answer_n, answer_n);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            fread(&answer_m.values[i][j], sizeof(int), 1, file);
+
+    fclose(file);
+
+    assert(areTwoMatricesEqual(&answer_m, &m));
+
+    freeMemMatrix(&m);
+    freeMemMatrix(&answer_m);
+}
+
+void test_task_8_exceptions_void_matrix() {
+    const char filename[] = "19_8_test_3";
+
+    int n = 0;
+    FILE* file = fopen(filename, "wb");
+
+    fwrite(&n, sizeof(int), 1, file);
+
+    fclose(file);
+
+    file = fopen(filename, "rb");
+
+    int answer_n;
+    fread(&answer_n, sizeof(int), 1, file);
+
+    fclose(file);
+
+    assert(n == answer_n);
+}
+
+void test_task_8() {
+    const char filename[] = "19_8_test_2";
+
+    FILE* file = fopen(filename, "wb");
+
+    int n = 3;
+    matrix m = createMatrixFromArray((int[]) {1, 2, 3,
+                                              4, 5, 6,
+                                              7, 8, 9}, 3, 3);
+
+    fwrite(&n, sizeof(int), 1, file);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            fwrite(&m.values[i][j], sizeof(int), 1, file);
+
+    fclose(file);
+
+    task_8(filename);
+
+    file = fopen(filename, "rb");
+
+    int res_n;
+    fread(&res_n, sizeof(int), 1, file);
+    matrix res_m = getMemMatrix(res_n, res_n);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            fread(&res_m.values[i][j], sizeof(int), 1, file);
+
+    fclose(file);
+
+    matrix answer = createMatrixFromArray((int[]) {1, 4, 7,
+                                                  2, 5, 8,
+                                                  3, 6, 9}, 3, 3);
+
+    assert(res_n == n);
+    assert(areTwoMatricesEqual(&res_m, &answer));
+
+    freeMemMatrix(&m);
+    freeMemMatrix(&res_m);
+    freeMemMatrix(&res_m);
+}
+
+void test_task_8_all_option() {
+    test_task_8_exceptions_sym_m();
+    test_task_8();
+    test_task_8_exceptions_void_matrix();
+}
 int main() {
     //test_task_1();
     //test_task_2();
@@ -743,7 +872,8 @@ int main() {
     //test_task_4();
     //test_task_5_all();
     //test_task_6();
-    test_task_7_all_options();
+    //test_task_7_all_options();
+    test_task_8_all_option();
 
     return 0;
 }
