@@ -5,6 +5,7 @@
 #include <math.h>
 #include "matrix.c"
 #include "vectorVoid.h"
+#include "vector.h"
 void copyFileContent(const char* sourceFile, const char* destinationFile) {
     FILE *source, *destination;
     char ch;
@@ -599,13 +600,150 @@ void test_task_6() {
         printf("Error\n");
     }
 }
+
+void task_7(const char* filename) {
+    vector positive_num = createVector(3);
+    vector negative_num = createVector(3);
+
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("reading error\n");
+        exit(1);
+    }
+
+    int corrective_num;
+    while (fread(&corrective_num, sizeof(int), 1, file) == 1) {
+        if (corrective_num >= 0)
+            pushBackVector(&positive_num, corrective_num);
+        else
+            pushBackVector(&negative_num, corrective_num);
+    }
+
+    fclose(file);
+
+    file = fopen(filename, "wb");
+    if (file == NULL) {
+        printf("reading error\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < positive_num.size; i++)
+        fwrite(positive_num.data + i, sizeof(int), 1, file);
+
+    for (int i = 0; i < negative_num.size; i++)
+        fwrite(negative_num.data + i, sizeof(int), 1, file);
+
+    deleteVector(&positive_num);
+    deleteVector(&negative_num);
+    fclose(file);
+}
+
+void test_task_7_by_condition() {
+    const char filename[] = "19_7_test";
+
+    int num_1 = 2;
+    int num_2 = 4;
+    int num_3 = -1;
+    int num_4 = -8;
+    FILE* file = fopen(filename, "wb");
+
+    fwrite(&num_1, sizeof(int), 1, file);
+    fwrite(&num_2, sizeof(int), 1, file);
+    fwrite(&num_3, sizeof(int), 1, file);
+    fwrite(&num_4, sizeof(int), 1, file);
+    fclose(file);
+
+    task_7(filename);
+
+    file = fopen(filename, "rb");
+    int ind_1, ind_2, ind_3, ind_4;
+    fread(&ind_1, sizeof(int), 1, file);
+    fread(&ind_2, sizeof(int), 1, file);
+    fread(&ind_3, sizeof(int), 1, file);
+    fread(&ind_4, sizeof(int), 1, file);
+    fclose(file);
+
+    assert(num_1 == ind_1);
+    assert(num_2 == ind_2);
+    assert(num_3 == ind_3);
+    assert(num_4 == ind_4);
+}
+
+void test_task_7_exceptions_only_positive() {
+    const char filename[] = "19_7_test_2";
+
+    int num_1 = 100;
+    int num_2 = 90;
+    int num_3 = 13;
+    int num_4 = 0;
+    FILE* file = fopen(filename, "wb");
+
+    fwrite(&num_1, sizeof(int), 1, file);
+    fwrite(&num_2, sizeof(int), 1, file);
+    fwrite(&num_3, sizeof(int), 1, file);
+    fwrite(&num_4, sizeof(int), 1, file);
+    fclose(file);
+
+    task_7(filename);
+
+    file = fopen(filename, "rb");
+    int ind_1, ind_2, ind_3, ind_4;
+    fread(&ind_1, sizeof(int), 1, file);
+    fread(&ind_2, sizeof(int), 1, file);
+    fread(&ind_3, sizeof(int), 1, file);
+    fread(&ind_4, sizeof(int), 1, file);
+    fclose(file);
+
+    assert(num_1 == ind_1);
+    assert(num_2 == ind_2);
+    assert(num_3 == ind_3);
+    assert(num_4 == ind_4);
+}
+
+void test_task_7_exceptions_only_negative() {
+    const char filename[] = "19_7_test_3";
+
+    int num_1 = -12;
+    int num_2 = -44;
+    int num_3 = -26;
+    int num_4 = -1;
+    FILE* file = fopen(filename, "wb");
+
+    fwrite(&num_2, sizeof(int), 1, file);
+    fwrite(&num_3, sizeof(int), 1, file);
+    fwrite(&num_1, sizeof(int), 1, file);
+    fwrite(&num_4, sizeof(int), 1, file);
+    fclose(file);
+
+    task_7(filename);
+
+    file = fopen(filename, "rb");
+    int ind_1, ind_2, ind_3, ind_4;
+    fread(&ind_1, sizeof(int), 1, file);
+    fread(&ind_2, sizeof(int), 1, file);
+    fread(&ind_3, sizeof(int), 1, file);
+    fread(&ind_4, sizeof(int), 1, file);
+    fclose(file);
+
+    assert(num_1 == ind_3);
+    assert(num_2 == ind_1);
+    assert(num_3 == ind_2);
+    assert(num_4 == ind_4);
+}
+
+void test_task_7_all_options() {
+    test_task_7_by_condition();
+    test_task_7_exceptions_only_positive();
+    test_task_7_exceptions_only_negative();
+}
 int main() {
     //test_task_1();
     //test_task_2();
     //test_task_3_all_action();
     //test_task_4();
     //test_task_5_all();
-    test_task_6();
+    //test_task_6();
+    test_task_7_all_options();
 
     return 0;
 }
